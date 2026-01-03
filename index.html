@@ -66,11 +66,13 @@ body {
 }
 
 li {
-  padding: 12px 18px;
+  padding: 8px 12px;
   border-radius: 20px;
   word-wrap: break-word;
   max-width: 75%;
   font-size: 1em;
+  display: flex;
+  flex-direction: column;
 }
 
 li.mine {
@@ -83,6 +85,12 @@ li.other {
   background: #ff69b4;
   color: #fff;
   align-self: flex-start;
+}
+
+li .name {
+  font-size: 0.7em;
+  opacity: 0.7;
+  margin-bottom: 2px;
 }
 
 form {
@@ -162,8 +170,17 @@ usernameBtn.addEventListener('click', () => {
 // Dodawanie wiadomości do listy
 function addMessage(data){
   const li = document.createElement('li');
-  li.textContent = data.msg; // tylko treść
   li.classList.add(data.name === username ? 'mine' : 'other');
+
+  const spanName = document.createElement('span');
+  spanName.classList.add('name');
+  spanName.textContent = data.name;
+
+  const spanMsg = document.createElement('span');
+  spanMsg.textContent = data.msg;
+
+  li.appendChild(spanName);
+  li.appendChild(spanMsg);
   messages.appendChild(li);
   messages.scrollTop = messages.scrollHeight;
 }
