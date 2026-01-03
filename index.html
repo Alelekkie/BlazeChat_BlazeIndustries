@@ -14,6 +14,7 @@ body {
   height: 100vh;
   margin:0;
 }
+
 #chat-container {
   display: none;
   flex-direction: column;
@@ -25,11 +26,13 @@ body {
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   overflow: hidden;
 }
+
 #username-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 #username-input, #input {
   padding: 10px 15px;
   border-radius: 25px;
@@ -37,6 +40,7 @@ body {
   outline: none;
   font-size: 1em;
 }
+
 #username-btn, button {
   padding: 10px 20px;
   border: none;
@@ -46,9 +50,11 @@ body {
   font-weight: bold;
   cursor: pointer;
 }
+
 #username-btn:hover, button:hover {
   background: #ff1493;
 }
+
 #messages {
   flex: 1;
   overflow-y: auto;
@@ -58,6 +64,7 @@ body {
   gap: 10px;
   list-style: none;
 }
+
 li {
   padding: 8px 12px;
   border-radius: 20px;
@@ -67,24 +74,29 @@ li {
   display: flex;
   flex-direction: column;
 }
+
 li.mine {
   align-self: flex-end;
-  background: #ffffff;
   color: #000;
 }
+
 li.other {
   align-self: flex-start;
+  color: #fff;
 }
+
 li .name {
   font-size: 0.7em;
   opacity: 0.7;
   margin-bottom: 2px;
 }
+
 form {
   display: flex;
   padding: 10px;
   background: #ffd6e8;
 }
+
 form button {
   margin-left: 10px;
 }
@@ -118,6 +130,7 @@ const firebaseConfig = {
   messagingSenderId: "637146824126",
   appId: "1:637146824126:web:ac6c1ea29f6f2a51850def"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -130,17 +143,25 @@ const messages = document.getElementById('messages');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 
-// Kolory użytkowników
-let userColors = {};
-
 // Pobierz zapisany nick z localStorage
 let username = localStorage.getItem('blazeChatUser');
 
-// Jeśli jest zapisany użytkownik, pokazujemy chat
+// Obiekt kolorów użytkowników pobrany z Firestore
+let userColors = {};
+
+// Funkcja pobiera wszystkie kolory z Firestore
+async function loadUserColors(){
+  const snapshot = await db.collection("users").get();
+  snapshot.forEach(doc => {
+    userColors[doc.id] = doc.data().color;
+  });
+}
+
+// Jeśli jest zapisany użytkownik, od razu pokazujemy chat
 if(username){
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
-  loadMessages();
+  initChat();
 }
 
 // Wprowadzenie nicku
@@ -151,24 +172,16 @@ usernameBtn.addEventListener('click', () => {
   localStorage.setItem('blazeChatUser', username);
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
-  loadMessages();
+  initChat();
 });
 
-// Pobierz kolory użytkowników i zapis w userColors
-function fetchUserColorsRealtime(){
-  db.collection("users").onSnapshot(snapshot => {
-    snapshot.forEach(doc => {
-      userColors[doc.id] = doc.data().color;
-    });
-    // Po każdej zmianie kolorów odśwież wiadomości
-    document.querySelectorAll('li.other').forEach(li => {
-      const name = li.querySelector('.name').textContent;
-      li.style.backgroundColor = userColors[name] || "#FF69B4";
-    });
-  });
+// Funkcja inicjalizująca chat
+async function initChat(){
+  await loadUserColors(); // pobierz kolory
+  loadMessages();          // uruchom nasłuchiwanie wiadomości
 }
 
-// Dodawanie wiadomości do listy
+// Dodawanie wiadomości do listy z kolorem na podstawie Firestore
 function addMessage(data){
   const li = document.createElement('li');
 
@@ -182,11 +195,14 @@ function addMessage(data){
   li.appendChild(spanName);
   li.appendChild(spanMsg);
 
+  const color = userColors[data.name] || "#FF69B4"; // domyślny róż jeśli brak w Firestore
+
   if(data.name === username){
     li.classList.add('mine');
+    li.style.backgroundColor = color; // Twój kolor z Firestore
   } else {
     li.classList.add('other');
-    li.style.backgroundColor = userColors[data.name] || "#FF69B4";
+    li.style.backgroundColor = color; // Kolor innego użytkownika
   }
 
   messages.appendChild(li);
@@ -195,7 +211,6 @@ function addMessage(data){
 
 // Ładowanie wiadomości i nasłuchiwanie zmian
 function loadMessages(){
-  fetchUserColorsRealtime();
   db.collection("messages").orderBy("timestamp")
     .onSnapshot(snapshot => {
       messages.innerHTML = '';
