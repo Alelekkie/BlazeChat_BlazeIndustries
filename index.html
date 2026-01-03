@@ -77,12 +77,12 @@
 
     li.mine {
       align-self: flex-end;
-      background: #ffffff;
       color: #000;
     }
 
     li.other {
       align-self: flex-start;
+      color: #fff;
     }
 
     li .name {
@@ -143,25 +143,22 @@
     const form = document.getElementById('form');
     const input = document.getElementById('input');
 
-    // Mapa kolorów dla konkretnych imion
+    // Stałe kolory użytkowników
     const userColors = {
-      "Klaudia": "#8B008B", // ciemny róż
-      "Paweł": "#FF69B4",   // jasny róż
-      "Justyna": "#FFFFFF",  // biały
-      // dodaj kolejne imiona i kolory tutaj
+      "Klaudia": "#8B008B",
+      "Paweł": "#FF69B4",
+      "Justyna": "#DB7093",
+      // dodaj inne imiona tutaj
     };
 
-    // Pobierz zapisany nick z localStorage
     let username = localStorage.getItem('blazeChatUser');
 
-    // Jeśli jest zapisany użytkownik, od razu pokazujemy chat
     if(username){
       usernameContainer.style.display = 'none';
       chatContainer.style.display = 'flex';
       loadMessages();
     }
 
-    // Wprowadzenie nicku
     usernameBtn.addEventListener('click', () => {
       const name = usernameInput.value.trim();
       if(!name) return alert("Wpisz swoje imię!");
@@ -172,7 +169,7 @@
       loadMessages();
     });
 
-    // Dodawanie wiadomości do listy z kolorem na podstawie imienia
+    // Dodawanie wiadomości
     function addMessage(data){
       const li = document.createElement('li');
 
@@ -186,19 +183,21 @@
       li.appendChild(spanName);
       li.appendChild(spanMsg);
 
-      // Kolor dla cudzych wiadomości na podstawie mapy
+      const color = userColors[data.name] || "#FF69B4"; // każdy użytkownik ma swój kolor
+
+      li.style.backgroundColor = color;
+
       if(data.name === username){
         li.classList.add('mine');
       } else {
         li.classList.add('other');
-        li.style.backgroundColor = userColors[data.name] || "#FF69B4"; // domyślny róż jeśli brak w mapie
       }
 
       messages.appendChild(li);
       messages.scrollTop = messages.scrollHeight;
     }
 
-    // Ładowanie wiadomości i nasłuchiwanie zmian
+    // Ładowanie wiadomości
     function loadMessages(){
       db.collection("messages").orderBy("timestamp")
         .onSnapshot(snapshot => {
