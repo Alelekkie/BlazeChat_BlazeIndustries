@@ -1,239 +1,105 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PaolaBlaze</title>
-  <link rel="manifest" href="manifest.json">
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
-  </script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
-    
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      background-color: #121212;
-      color: #FFA500;
-    }
-    .header {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      background: #000;
-      color: #FFA500;
-      z-index: 1000;
-      font-family: 'Pacifico', cursive;
-      font-size: 24px;
-      
-    }
-    .container {
-      margin-top: 80px;
-      padding: 10px;
-    }
-    .film-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid #FFA500;
-      background: #222;
-      color: #FFA500;
-      margin-bottom: 5px;
-    }
-    .film-info {
-      flex: 1;
-      text-align: left;
-    }
-    .checkbox-container {
-      display: inline-flex;
-      align-items: center;
-      margin: 0 10px;
-    }
-    .completed {
-      background: #4CAF50;
-    }
-    button {
-      background: #FFA500;
-      color: black;
-      border: none;
-      padding: 5px 10px;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    button:hover {
-      background: #ff7800;
-    }
-    /* Modal styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-    .modal-content {
-      position: relative;
-      top: 20%;
-      margin: 0 auto;
-      background: #333;
-      padding: 20px;
-      width: 80%;
-      max-width: 400px;
-      color: #FFA500;
-      border-radius: 10px;
-    }
-    .modal input,
-    .modal select {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      background: #444;
-      color: #FFA500;
-      border: none;
-      border-radius: 5px;
-    }
-    .modal button {
-      background: #ff7800;
-      color: #fff;
-    }
-    /* Style dla checkboxów */
-    .film-row input[type="checkbox"] {
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #FFA500;
-      border-radius: 5px;
-      background-color: #222;
-      cursor: pointer;
-    }
-    .film-row input[type="checkbox"]:checked {
-      background-color: #4CAF50;
-    }
-    /* Kolor wiersza, gdy data zbliża się do 48 godzin przed */
-    .film-row.warning {
-      background: #FF5733;
-    }
-    .completed-text {
-      margin-left: 5px;
-      font-weight: bold;
-      font-size: 18px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blaze Chat 🔥</title>
+<style>
+body { font-family: Arial; background: #fff0f5; display:flex; justify-content:center; align-items:center; height:100vh; }
+#chat-container { display:none; flex-direction:column; width:100%; max-width:500px; height:90vh; border-radius:20px; background:#ffe6f2; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden; }
+#username-container { display:flex; flex-direction:column; gap:10px; }
+#username-input, #host-ip, #input { padding:10px 15px; border-radius:25px; border:1px solid #ff69b4; outline:none; font-size:1em; }
+#username-btn, button { padding:10px 20px; border:none; border-radius:25px; background:#ff69b4; color:white; font-weight:bold; cursor:pointer; }
+#username-btn:hover, button:hover { background:#ff1493; }
+#messages { flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:10px; list-style:none; }
+li.user { background:#ff69b4; color:white; padding:12px 18px; border-radius:20px; word-wrap:break-word; align-self:flex-start; }
+form { display:flex; padding:10px; background:#ffd6e8; }
+form button { margin-left:10px; }
+</style>
 </head>
 <body>
-  <div class="header">
-    PaolaBlaze<br>
-    Wykonane: <span id="completedCount">0</span>
-    <button type="button" onclick="showModal()">➕</button>
-  </div>
-  <div class="container" id="filmList"></div>
-  
-  <!-- Modal -->
-  <div class="modal" id="modal">
-    <div class="modal-content">
-      <h3>Dodaj Film</h3>
-      <label for="title">Tytuł:</label>
-      <input type="text" id="title" placeholder="Podaj tytuł filmu">
-      <label for="category">Kategoria:</label>
-      <select id="category">
-        <option value="obciąganie">obciąganie</option>
-        <option value="squirt">squirt</option>
-        <option value="scenka">scenka</option>
-        <option value="film w pionie">film w pionie</option>
-        <option value="mocne jęki">mocne jęki</option>
-        <option value="pov">pov</option>
-        <option value="public">public</option>
-      </select>
-      <label for="date">Data i godzina (Wybierz datę i godzinę):</label>
-      <input type="datetime-local" id="date">
-      <button type="button" onclick="addFilmFromModal()">Dodaj</button>
-      <button type="button" onclick="closeModal()">Anuluj</button>
-    </div>
-  </div>
-  
-  <script>
-    let films = JSON.parse(localStorage.getItem('films')) || [];
 
-    function renderFilms() {
-      const filmList = document.getElementById("filmList");
-      filmList.innerHTML = "";
-      let completedCount = 0;
-      films.forEach((film, index) => {
-        let row = document.createElement("div");
-        row.className = "film-row" + (film.completed ? " completed" : "");
+<div id="username-container">
+  <input id="username-input" placeholder="Wpisz swoje imię..." />
+  <button id="username-btn">Wejdź do czatu</button>
+</div>
 
-        // Parsujemy datę i sprawdzamy ostrzeżenie 48h przed terminem
-        let filmDate = new Date(film.date);
-        let currentDate = new Date();
-        let timeDifference = filmDate - currentDate;
-        if (timeDifference <= 48 * 60 * 60 * 1000 && timeDifference > 0) {
-          row.classList.add("warning");
-        }
-        
-        row.innerHTML = `
-          <span class="film-info">${film.title} (${film.category}) - ${film.date}</span>
-          <span class="checkbox-container">
-            <input type="checkbox" ${film.completed ? "checked" : ""} onclick="toggleComplete(${index})">
-            <span class="completed-text">${film.completed ? "Wykonane" : "Nie wykonane"}</span>
-          </span>
-          <button type="button" onclick="deleteFilm(${index})">❌</button>
-        `;
-        filmList.appendChild(row);
-        if (film.completed) completedCount++;
-      });
-      document.getElementById("completedCount").innerText = completedCount;
-      localStorage.setItem("films", JSON.stringify(films));
-    }
+<div id="chat-container">
+  <ul id="messages"></ul>
+  <form id="form">
+    <input id="input" autocomplete="off" placeholder="Napisz wiadomość..." />
+    <button>Wyślij</button>
+  </form>
+</div>
 
-    function showModal() {
-      document.getElementById("modal").style.display = "block";
-    }
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-    function closeModal() {
-      document.getElementById("modal").style.display = "none";
-    }
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBcUrOCR-1v2uLU0X58XNeTVzewDTAMAuI",
+  authDomain: "blazechat-41e29.firebaseapp.com",
+  projectId: "blazechat-41e29",
+  storageBucket: "blazechat-41e29.firebasestorage.app",
+  messagingSenderId: "637146824126",
+  appId: "1:637146824126:web:ac6c1ea29f6f2a51850def"
+};
 
-    function addFilmFromModal() {
-      let title = document.getElementById("title").value.trim();
-      let category = document.getElementById("category").value;
-      let date = document.getElementById("date").value;
-      
-      if (!title || !category || !date) {
-        alert("Wszystkie pola są wymagane!");
-        return;
-      }
-      
-      films.push({ title, category, date, completed: false });
-      renderFilms();
-      closeModal();
-      
-      document.getElementById("title").value = "";
-      document.getElementById("category").selectedIndex = 0;
-      document.getElementById("date").value = "";
-    }
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-    function toggleComplete(index) {
-      films[index].completed = !films[index].completed;
-      renderFilms();
-    }
+const usernameContainer = document.getElementById('username-container');
+const usernameInput = document.getElementById('username-input');
+const usernameBtn = document.getElementById('username-btn');
+const chatContainer = document.getElementById('chat-container');
+const messages = document.getElementById('messages');
+const form = document.getElementById('form');
+const input = document.getElementById('input');
 
-    function deleteFilm(index) {
-      films.splice(index, 1);
-      renderFilms();
-    }
+let username = null;
 
-    renderFilms();
-  </script>
+// Wprowadzenie nicku
+usernameBtn.addEventListener('click', () => {
+  const name = usernameInput.value.trim();
+  if(!name) return alert("Wpisz swoje imię!");
+  username = name;
+  usernameContainer.style.display = 'none';
+  chatContainer.style.display = 'flex';
+  loadMessages();
+});
+
+// Funkcja dodająca wiadomość do listy
+function addMessage(data) {
+  const li = document.createElement('li');
+  li.textContent = `${data.name}: ${data.msg}`;
+  li.classList.add('user');
+  messages.appendChild(li);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// Słuchanie nowych wiadomości w czasie rzeczywistym
+function loadMessages() {
+  db.collection("messages").orderBy("timestamp")
+    .onSnapshot(snapshot => {
+      messages.innerHTML = '';
+      snapshot.forEach(doc => addMessage(doc.data()));
+    });
+}
+
+// Wysyłanie wiadomości
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  if(input.value.trim() && username) {
+    db.collection("messages").add({
+      name: username,
+      msg: input.value,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    input.value = '';
+  }
+});
+</script>
+
 </body>
 </html>
