@@ -8,11 +8,13 @@
 body { font-family: Arial; background: #fff0f5; display:flex; justify-content:center; align-items:center; height:100vh; }
 #chat-container { display:none; flex-direction:column; width:100%; max-width:500px; height:90vh; border-radius:20px; background:#ffe6f2; box-shadow:0 4px 15px rgba(0,0,0,0.2); overflow:hidden; }
 #username-container { display:flex; flex-direction:column; gap:10px; }
-#username-input, #host-ip, #input { padding:10px 15px; border-radius:25px; border:1px solid #ff69b4; outline:none; font-size:1em; }
+#username-input, #input { padding:10px 15px; border-radius:25px; border:1px solid #ff69b4; outline:none; font-size:1em; }
 #username-btn, button { padding:10px 20px; border:none; border-radius:25px; background:#ff69b4; color:white; font-weight:bold; cursor:pointer; }
 #username-btn:hover, button:hover { background:#ff1493; }
 #messages { flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:10px; list-style:none; }
-li.user { background:#ff69b4; color:white; padding:12px 18px; border-radius:20px; word-wrap:break-word; align-self:flex-start; }
+li.user { padding:12px 18px; border-radius:20px; word-wrap:break-word; max-width:75%; font-size:1em; }
+li.mine { background:#ffffff; color:#000; align-self:flex-end; }
+li.other { background:#ff69b4; color:white; align-self:flex-start; }
 form { display:flex; padding:10px; background:#ffd6e8; }
 form button { margin-left:10px; }
 </style>
@@ -37,13 +39,14 @@ form button { margin-left:10px; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+// Konfiguracja Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyBcUrOCR-1v2uLU0X58XNeTVzewDTAMAuI",
-  authDomain: "blazechat-41e29.firebaseapp.com",
-  projectId: "blazechat-41e29",
-  storageBucket: "blazechat-41e29.firebasestorage.app",
-  messagingSenderId: "637146824126",
-  appId: "1:637146824126:web:ac6c1ea29f6f2a51850def"
+  apiKey: "TU_WSTAW_SWÓJ_APIKEY",
+  authDomain: "TU_PROJEKT.firebaseapp.com",
+  projectId: "TU_PROJEKT",
+  storageBucket: "TU_PROJEKT.appspot.com",
+  messagingSenderId: "TU_ID",
+  appId: "TU_APPID"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -57,28 +60,36 @@ const messages = document.getElementById('messages');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 
-let username = null;
+let username = localStorage.getItem('blazeChatUser') || null;
+
+// Jeśli jest zapisany użytkownik, pomijamy wpisywanie nicku
+if(username){
+  usernameContainer.style.display = 'none';
+  chatContainer.style.display = 'flex';
+  loadMessages();
+}
 
 // Wprowadzenie nicku
 usernameBtn.addEventListener('click', () => {
   const name = usernameInput.value.trim();
   if(!name) return alert("Wpisz swoje imię!");
   username = name;
+  localStorage.setItem('blazeChatUser', username); // pamiętaj użytkownika
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
   loadMessages();
 });
 
-// Funkcja dodająca wiadomość do listy
+// Dodawanie wiadomości
 function addMessage(data) {
   const li = document.createElement('li');
-  li.textContent = `${data.name}: ${data.msg}`;
-  li.classList.add('user');
+  li.textContent = data.msg; // tylko treść, bez imienia
+  li.classList.add(data.name === username ? 'mine' : 'other');
   messages.appendChild(li);
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Słuchanie nowych wiadomości w czasie rzeczywistym
+// Ładowanie wiadomości i nasłuchiwanie w czasie rzeczywistym
 function loadMessages() {
   db.collection("messages").orderBy("timestamp")
     .onSnapshot(snapshot => {
@@ -90,7 +101,7 @@ function loadMessages() {
 // Wysyłanie wiadomości
 form.addEventListener('submit', e => {
   e.preventDefault();
-  if(input.value.trim() && username) {
+  if(input.value.trim() && username){
     db.collection("messages").add({
       name: username,
       msg: input.value,
