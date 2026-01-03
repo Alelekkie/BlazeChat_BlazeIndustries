@@ -77,12 +77,12 @@ li {
 
 li.mine {
   align-self: flex-end;
-  background: #ffffff;
   color: #000;
 }
 
 li.other {
   align-self: flex-start;
+  color: #fff;
 }
 
 li .name {
@@ -117,6 +117,7 @@ form button {
   </form>
 </div>
 
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -143,18 +144,68 @@ const messages = document.getElementById('messages');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 
-// Mapa kolorów dla konkretnych imion
-const userColors = {
-  "Klaudia": "#8B008B",  // ciemny róż
-  "Paweł": "#FF69B4",    // jasny róż
-  "Justyna": "#FFFFFF",   // biały
-  // dodaj kolejne imiona i kolory tutaj
-};
-
 // Pobierz zapisany nick z localStorage
 let username = localStorage.getItem('blazeChatUser');
 
-// Jeśli jest zapisany użytkownik, od razu pokazujemy chat
+// Cache kolorów w przeglądarce
+const userColorCache = {};
+
+// Funkcja pobierająca kolor użytkownika z Firestore lub przypisująca losowy
+async function getUserColor(name){
+  if(userColorCache[name]) return userColorCache[name];
+
+  const userRef = db.collection('users').doc(name);
+  const doc = await userRef.get();
+  if(doc.exists){
+    userColorCache[name] = doc.data().color;
+    return userColorCache[name];
+  } else {
+    const colorsPalette = ['#FF1493','#FF69B4','#8B008B','#FFC0CB','#DB7093','#FFB6C1'];
+    const color = colorsPalette[Math.floor(Math.random() * colorsPalette.length)];
+    await userRef.set({ color });
+    userColorCache[name] = color;
+    return color;
+  }
+}
+
+// Funkcja dodająca wiadomość
+async function addMessage(data){
+  const li = document.createElement('li');
+
+  const spanName = document.createElement('span');
+  spanName.classList.add('name');
+  spanName.textContent = data.name;
+
+  const spanMsg = document.createElement('span');
+  spanMsg.textContent = data.msg;
+
+  li.appendChild(spanName);
+  li.appendChild(spanMsg);
+
+  const color = await getUserColor(data.name);
+
+  if(data.name === username){
+    li.classList.add('mine');
+    li.style.backgroundColor = color;
+  } else {
+    li.classList.add('other');
+    li.style.backgroundColor = color;
+  }
+
+  messages.appendChild(li);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// Ładowanie wiadomości i nasłuchiwanie zmian
+function loadMessages(){
+  db.collection("messages").orderBy("timestamp")
+    .onSnapshot(snapshot => {
+      messages.innerHTML = '';
+      snapshot.forEach(doc => addMessage(doc.data()));
+    });
+}
+
+// Pokazanie chat jeśli user zapisany
 if(username){
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
@@ -171,41 +222,6 @@ usernameBtn.addEventListener('click', () => {
   chatContainer.style.display = 'flex';
   loadMessages();
 });
-
-// Dodawanie wiadomości do listy z kolorem na podstawie imienia
-function addMessage(data){
-  const li = document.createElement('li');
-
-  const spanName = document.createElement('span');
-  spanName.classList.add('name');
-  spanName.textContent = data.name;
-
-  const spanMsg = document.createElement('span');
-  spanMsg.textContent = data.msg;
-
-  li.appendChild(spanName);
-  li.appendChild(spanMsg);
-
-  // Kolor dla cudzych wiadomości na podstawie mapy
-  if(data.name === username){
-    li.classList.add('mine');
-  } else {
-    li.classList.add('other');
-    li.style.backgroundColor = userColors[data.name] || "#FF69B4"; // domyślny róż jeśli brak w mapie
-  }
-
-  messages.appendChild(li);
-  messages.scrollTop = messages.scrollHeight;
-}
-
-// Ładowanie wiadomości i nasłuchiwanie zmian
-function loadMessages(){
-  db.collection("messages").orderBy("timestamp")
-    .onSnapshot(snapshot => {
-      messages.innerHTML = '';
-      snapshot.forEach(doc => addMessage(doc.data()));
-    });
-}
 
 // Wysyłanie wiadomości
 form.addEventListener('submit', e => {
