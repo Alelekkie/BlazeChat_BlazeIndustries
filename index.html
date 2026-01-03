@@ -77,7 +77,7 @@ li {
 
 li.mine {
   align-self: flex-end;
-  background: #ffffff; /* kolor własnej wiadomości */
+  background: #ffffff;
   color: #000;
 }
 
@@ -143,42 +143,53 @@ const messages = document.getElementById('messages');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 
+// Paleta kolorów
+const colorsPalette = ['#FF1493', '#FF69B4', '#8B008B', '#FFC0CB', '#DB7093', '#FFB6C1', '#FF4500', '#00CED1'];
+
 // Pobierz zapisany nick i kolor
 let username = localStorage.getItem('blazeChatUser');
 let userColor = localStorage.getItem('blazeChatColor');
 
-// Funkcja generująca losowy kolor w HEX
+// Funkcja generująca losowy kolor z palety
 function randomColor() {
-  const colors = ['#ff7f50','#ff4500','#1e90ff','#32cd32','#9370db','#ff1493','#00ced1','#ffa500'];
-  return colors[Math.floor(Math.random() * colors.length)];
+  return colorsPalette[Math.floor(Math.random() * colorsPalette.length)];
 }
 
-// Jeśli nie ma koloru, generujemy nowy
-if(!userColor){
-  userColor = randomColor();
-  localStorage.setItem('blazeChatColor', userColor);
+// Pobranie koloru użytkownika z Firestore lub nadanie nowego
+async function getUserColor(name){
+  const userRef = db.collection('users').doc(name);
+  const doc = await userRef.get();
+  if(doc.exists){
+    return doc.data().color;
+  } else {
+    const color = randomColor();
+    await userRef.set({ color });
+    return color;
+  }
 }
 
 // Jeśli jest zapisany użytkownik, od razu pokazujemy chat
 if(username){
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
-  loadMessages();
+  (async () => { userColor = await getUserColor(username); loadMessages(); })();
 }
 
 // Wprowadzenie nicku
-usernameBtn.addEventListener('click', () => {
+usernameBtn.addEventListener('click', async () => {
   const name = usernameInput.value.trim();
   if(!name) return alert("Wpisz swoje imię!");
   username = name;
   localStorage.setItem('blazeChatUser', username);
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
+  userColor = await getUserColor(username);
+  localStorage.setItem('blazeChatColor', userColor);
   loadMessages();
 });
 
-// Dodawanie wiadomości do listy z kolorem użytkownika
-function addMessage(data){
+// Dodawanie wiadomości do listy z kolorem
+async function addMessage(data){
   const li = document.createElement('li');
 
   const spanName = document.createElement('span');
@@ -191,14 +202,12 @@ function addMessage(data){
   li.appendChild(spanName);
   li.appendChild(spanMsg);
 
-  // Kolor wiadomości
   if(data.name === username){
-    li.classList.add('mine');
-    li.style.backgroundColor = '#ffffff'; // własne wiadomości białe
+    li.classList.add('mine'); // własne wiadomości białe
   } else {
-    li.classList.add('other');
-    // Jeśli użytkownik już ma kolor w localStorage w bazie, użyj go, inaczej losowy
-    li.style.backgroundColor = data.color || randomColor();
+    li.classList.add('other'); // cudze
+    const color = await getUserColor(data.name);
+    li.style.backgroundColor = color;
   }
 
   messages.appendChild(li);
@@ -221,7 +230,6 @@ form.addEventListener('submit', e => {
     db.collection("messages").add({
       name: username,
       msg: input.value,
-      color: userColor,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
     input.value = '';
