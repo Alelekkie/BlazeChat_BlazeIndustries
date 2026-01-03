@@ -76,14 +76,12 @@ li {
 }
 
 li.mine {
-  background: #ffffff;
-  color: #000;
   align-self: flex-end;
+  background: #ffffff; /* kolor własnej wiadomości */
+  color: #000;
 }
 
 li.other {
-  background: #ff69b4;
-  color: #fff;
   align-self: flex-start;
 }
 
@@ -119,7 +117,6 @@ form button {
   </form>
 </div>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -146,10 +143,23 @@ const messages = document.getElementById('messages');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 
-// Pobierz zapisany nick z localStorage
+// Pobierz zapisany nick i kolor
 let username = localStorage.getItem('blazeChatUser');
+let userColor = localStorage.getItem('blazeChatColor');
 
-// Jeśli jest zapisany użytkownik, pomijamy wpisywanie nicku
+// Funkcja generująca losowy kolor w HEX
+function randomColor() {
+  const colors = ['#ff7f50','#ff4500','#1e90ff','#32cd32','#9370db','#ff1493','#00ced1','#ffa500'];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+// Jeśli nie ma koloru, generujemy nowy
+if(!userColor){
+  userColor = randomColor();
+  localStorage.setItem('blazeChatColor', userColor);
+}
+
+// Jeśli jest zapisany użytkownik, od razu pokazujemy chat
 if(username){
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
@@ -167,10 +177,9 @@ usernameBtn.addEventListener('click', () => {
   loadMessages();
 });
 
-// Dodawanie wiadomości do listy
+// Dodawanie wiadomości do listy z kolorem użytkownika
 function addMessage(data){
   const li = document.createElement('li');
-  li.classList.add(data.name === username ? 'mine' : 'other');
 
   const spanName = document.createElement('span');
   spanName.classList.add('name');
@@ -181,6 +190,17 @@ function addMessage(data){
 
   li.appendChild(spanName);
   li.appendChild(spanMsg);
+
+  // Kolor wiadomości
+  if(data.name === username){
+    li.classList.add('mine');
+    li.style.backgroundColor = '#ffffff'; // własne wiadomości białe
+  } else {
+    li.classList.add('other');
+    // Jeśli użytkownik już ma kolor w localStorage w bazie, użyj go, inaczej losowy
+    li.style.backgroundColor = data.color || randomColor();
+  }
+
   messages.appendChild(li);
   messages.scrollTop = messages.scrollHeight;
 }
@@ -201,6 +221,7 @@ form.addEventListener('submit', e => {
     db.collection("messages").add({
       name: username,
       msg: input.value,
+      color: userColor,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
     input.value = '';
@@ -210,4 +231,3 @@ form.addEventListener('submit', e => {
 
 </body>
 </html>
-
