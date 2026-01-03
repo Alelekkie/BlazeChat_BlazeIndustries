@@ -6,7 +6,7 @@
   <title>Blaze Chat 🔥</title>
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background: #fff0f5;
       display: flex;
       justify-content: center;
@@ -63,6 +63,21 @@
       flex-direction: column;
       gap: 10px;
       list-style: none;
+      scrollbar-width: thin;          /* Firefox */
+      scrollbar-color: #ff69b4 #ffe6f2; /* Firefox */
+    }
+
+    /* Chrome, Edge, Safari */
+    #messages::-webkit-scrollbar {
+      width: 8px;
+    }
+    #messages::-webkit-scrollbar-track {
+      background: #ffe6f2;
+      border-radius: 8px;
+    }
+    #messages::-webkit-scrollbar-thumb {
+      background-color: #ff69b4;
+      border-radius: 8px;
     }
 
     li {
@@ -77,12 +92,14 @@
 
     li.mine {
       align-self: flex-end;
+      background: rgba(255,255,255,0.8);
       color: #000;
     }
 
     li.other {
       align-self: flex-start;
       color: #fff;
+      opacity: 0.95;
     }
 
     li .name {
@@ -100,6 +117,23 @@
     form button {
       margin-left: 10px;
     }
+      #messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  
+  /* ukrycie scrollbara */
+  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+#messages::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
   </style>
 </head>
 <body>
@@ -121,7 +155,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBcUrOCR-1v2uLU0X58XNeTVzewDTAMAuI",
       authDomain: "blazechat-41e29.firebaseapp.com",
@@ -134,7 +167,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // DOM
     const usernameContainer = document.getElementById('username-container');
     const usernameInput = document.getElementById('username-input');
     const usernameBtn = document.getElementById('username-btn');
@@ -143,7 +175,6 @@
     const form = document.getElementById('form');
     const input = document.getElementById('input');
 
-    // Stałe kolory użytkowników
     const userColors = {
       "Klaudia": "#8B008B",
       "Paweł": "#FF69B4",
@@ -169,22 +200,32 @@
       loadMessages();
     });
 
-    // Dodawanie wiadomości
+    function parseMessage(msg){
+      return msg
+        .replace(/:\)/g, "😊")
+        .replace(/:\(/g, "😢")
+        .replace(/:D/g, "😃")
+        .replace(/\*(.*?)\*/g, "<b>$1</b>");
+    }
+
     function addMessage(data){
       const li = document.createElement('li');
 
       const spanName = document.createElement('span');
       spanName.classList.add('name');
-      spanName.textContent = data.name;
+
+      const date = new Date(data.timestamp?.toDate?.() || Date.now());
+      const hours = String(date.getHours()).padStart(2,'0');
+      const minutes = String(date.getMinutes()).padStart(2,'0');
+      spanName.innerHTML = `${data.name} • ${hours}:${minutes}`;
 
       const spanMsg = document.createElement('span');
-      spanMsg.textContent = data.msg;
+      spanMsg.innerHTML = parseMessage(data.msg);
 
       li.appendChild(spanName);
       li.appendChild(spanMsg);
 
-      const color = userColors[data.name] || "#FF69B4"; // każdy użytkownik ma swój kolor
-
+      const color = userColors[data.name] || "#FF69B4";
       li.style.backgroundColor = color;
 
       if(data.name === username){
@@ -194,10 +235,12 @@
       }
 
       messages.appendChild(li);
-      messages.scrollTop = messages.scrollHeight;
+
+      // scroll tylko jeśli użytkownik jest na dole
+      const isAtBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 5;
+      if(isAtBottom) messages.scrollTop = messages.scrollHeight;
     }
 
-    // Ładowanie wiadomości
     function loadMessages(){
       db.collection("messages").orderBy("timestamp")
         .onSnapshot(snapshot => {
@@ -206,7 +249,6 @@
         });
     }
 
-    // Wysyłanie wiadomości
     form.addEventListener('submit', e => {
       e.preventDefault();
       if(input.value.trim() && username){
@@ -219,5 +261,6 @@
       }
     });
   </script>
+
 </body>
 </html>
