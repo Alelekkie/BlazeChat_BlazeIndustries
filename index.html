@@ -1,247 +1,224 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blaze Chat 🔥</title>
-<style>
-body {
-  font-family: Arial;
-  background: #fff0f5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin:0;
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blaze Chat 🔥</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #fff0f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
 
-#chat-container {
-  display: none;
-  flex-direction: column;
-  width: 100%;
-  max-width: 500px;
-  height: 90vh;
-  border-radius: 20px;
-  background: #ffe6f2;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  overflow: hidden;
-}
+    #chat-container {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      max-width: 500px;
+      height: 90vh;
+      border-radius: 20px;
+      background: #ffe6f2;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
 
-#username-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+    #username-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-#username-input, #input {
-  padding: 10px 15px;
-  border-radius: 25px;
-  border: 1px solid #ff69b4;
-  outline: none;
-  font-size: 1em;
-}
+    #username-input, #input {
+      padding: 10px 15px;
+      border-radius: 25px;
+      border: 1px solid #ff69b4;
+      outline: none;
+      font-size: 1em;
+    }
 
-#username-btn, button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 25px;
-  background: #ff69b4;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
+    #username-btn, button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 25px;
+      background: #ff69b4;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-#username-btn:hover, button:hover {
-  background: #ff1493;
-}
+    #username-btn:hover, button:hover {
+      background: #ff1493;
+    }
 
-#messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  list-style: none;
-}
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      list-style: none;
+    }
 
-li {
-  padding: 8px 12px;
-  border-radius: 20px;
-  word-wrap: break-word;
-  max-width: 75%;
-  font-size: 1em;
-  display: flex;
-  flex-direction: column;
-}
+    li {
+      padding: 8px 12px;
+      border-radius: 20px;
+      word-wrap: break-word;
+      max-width: 75%;
+      font-size: 1em;
+      display: flex;
+      flex-direction: column;
+    }
 
-li.mine {
-  align-self: flex-end;
-  color: #000;
-}
+    li.mine {
+      align-self: flex-end;
+      background: #ffffff;
+      color: #000;
+    }
 
-li.other {
-  align-self: flex-start;
-  color: #fff;
-}
+    li.other {
+      align-self: flex-start;
+    }
 
-li .name {
-  font-size: 0.7em;
-  opacity: 0.7;
-  margin-bottom: 2px;
-}
+    li .name {
+      font-size: 0.7em;
+      opacity: 0.7;
+      margin-bottom: 2px;
+    }
 
-form {
-  display: flex;
-  padding: 10px;
-  background: #ffd6e8;
-}
+    form {
+      display: flex;
+      padding: 10px;
+      background: #ffd6e8;
+    }
 
-form button {
-  margin-left: 10px;
-}
-</style>
+    form button {
+      margin-left: 10px;
+    }
+  </style>
 </head>
 <body>
 
-<div id="username-container">
-  <input id="username-input" placeholder="Wpisz swoje imię..." />
-  <button id="username-btn">Wejdź do czatu</button>
-</div>
+  <div id="username-container">
+    <input id="username-input" placeholder="Wpisz swoje imię..." />
+    <button id="username-btn">Wejdź do czatu</button>
+  </div>
 
-<div id="chat-container">
-  <ul id="messages"></ul>
-  <form id="form">
-    <input id="input" autocomplete="off" placeholder="Napisz wiadomość..." />
-    <button>Wyślij</button>
-  </form>
-</div>
+  <div id="chat-container">
+    <ul id="messages"></ul>
+    <form id="form">
+      <input id="input" autocomplete="off" placeholder="Napisz wiadomość..." />
+      <button>Wyślij</button>
+    </form>
+  </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<script>
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyBcUrOCR-1v2uLU0X58XNeTVzewDTAMAuI",
-  authDomain: "blazechat-41e29.firebaseapp.com",
-  projectId: "blazechat-41e29",
-  storageBucket: "blazechat-41e29.firebasestorage.app",
-  messagingSenderId: "637146824126",
-  appId: "1:637146824126:web:ac6c1ea29f6f2a51850def"
-};
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBcUrOCR-1v2uLU0X58XNeTVzewDTAMAuI",
+      authDomain: "blazechat-41e29.firebaseapp.com",
+      projectId: "blazechat-41e29",
+      storageBucket: "blazechat-41e29.firebasestorage.app",
+      messagingSenderId: "637146824126",
+      appId: "1:637146824126:web:ac6c1ea29f6f2a51850def"
+    };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-// DOM
-const usernameContainer = document.getElementById('username-container');
-const usernameInput = document.getElementById('username-input');
-const usernameBtn = document.getElementById('username-btn');
-const chatContainer = document.getElementById('chat-container');
-const messages = document.getElementById('messages');
-const form = document.getElementById('form');
-const input = document.getElementById('input');
+    // DOM
+    const usernameContainer = document.getElementById('username-container');
+    const usernameInput = document.getElementById('username-input');
+    const usernameBtn = document.getElementById('username-btn');
+    const chatContainer = document.getElementById('chat-container');
+    const messages = document.getElementById('messages');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
 
-let username = localStorage.getItem('blazeChatUser');
+    // Mapa kolorów dla konkretnych imion
+    const userColors = {
+      "Klaudia": "#8B008B", // ciemny róż
+      "Paweł": "#FF69B4",   // jasny róż
+      "Justyna": "#FFFFFF",  // biały
+      // dodaj kolejne imiona i kolory tutaj
+    };
 
-// Obiekt kolorów
-let userColors = {};
+    // Pobierz zapisany nick z localStorage
+    let username = localStorage.getItem('blazeChatUser');
 
-// Funkcja zwracająca losowy kolor
-function getRandomColor() {
-  const colors = ["#FF69B4","#8B008B","#FF1493","#FFB6C1","#FFC0CB","#DB7093"];
-  return colors[Math.floor(Math.random() * colors.length)];
-}
+    // Jeśli jest zapisany użytkownik, od razu pokazujemy chat
+    if(username){
+      usernameContainer.style.display = 'none';
+      chatContainer.style.display = 'flex';
+      loadMessages();
+    }
 
-// Funkcja pobiera lub tworzy kolor użytkownika w Firestore
-async function getUserColor(name){
-  if(userColors[name]) return userColors[name]; // już mamy kolor
-  const docRef = db.collection("users").doc(name);
-  const doc = await docRef.get();
-  if(doc.exists){
-    userColors[name] = doc.data().color;
-  } else {
-    const color = getRandomColor();
-    await docRef.set({color});
-    userColors[name] = color;
-  }
-  return userColors[name];
-}
-
-// Jeśli jest zapisany użytkownik, od razu pokazujemy chat
-if(username){
-  usernameContainer.style.display = 'none';
-  chatContainer.style.display = 'flex';
-  initChat();
-}
-
-// Wprowadzenie nicku
-usernameBtn.addEventListener('click', () => {
-  const name = usernameInput.value.trim();
-  if(!name) return alert("Wpisz swoje imię!");
-  username = name;
-  localStorage.setItem('blazeChatUser', username);
-  usernameContainer.style.display = 'none';
-  chatContainer.style.display = 'flex';
-  initChat();
-});
-
-// Inicjalizacja czatu
-function initChat(){
-  loadMessages();
-}
-
-// Dodawanie wiadomości do listy
-async function addMessage(data){
-  const li = document.createElement('li');
-
-  const spanName = document.createElement('span');
-  spanName.classList.add('name');
-  spanName.textContent = data.name;
-
-  const spanMsg = document.createElement('span');
-  spanMsg.textContent = data.msg;
-
-  li.appendChild(spanName);
-  li.appendChild(spanMsg);
-
-  const color = await getUserColor(data.name);
-
-  if(data.name === username){
-    li.classList.add('mine');
-    li.style.backgroundColor = color;
-  } else {
-    li.classList.add('other');
-    li.style.backgroundColor = color;
-  }
-
-  messages.appendChild(li);
-  messages.scrollTop = messages.scrollHeight;
-}
-
-// Ładowanie wiadomości i nasłuchiwanie zmian
-function loadMessages(){
-  db.collection("messages").orderBy("timestamp")
-    .onSnapshot(snapshot => {
-      messages.innerHTML = '';
-      snapshot.forEach(doc => addMessage(doc.data()));
+    // Wprowadzenie nicku
+    usernameBtn.addEventListener('click', () => {
+      const name = usernameInput.value.trim();
+      if(!name) return alert("Wpisz swoje imię!");
+      username = name;
+      localStorage.setItem('blazeChatUser', username);
+      usernameContainer.style.display = 'none';
+      chatContainer.style.display = 'flex';
+      loadMessages();
     });
-}
 
-// Wysyłanie wiadomości
-form.addEventListener('submit', e => {
-  e.preventDefault();
-  if(input.value.trim() && username){
-    db.collection("messages").add({
-      name: username,
-      msg: input.value,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    // Dodawanie wiadomości do listy z kolorem na podstawie imienia
+    function addMessage(data){
+      const li = document.createElement('li');
+
+      const spanName = document.createElement('span');
+      spanName.classList.add('name');
+      spanName.textContent = data.name;
+
+      const spanMsg = document.createElement('span');
+      spanMsg.textContent = data.msg;
+
+      li.appendChild(spanName);
+      li.appendChild(spanMsg);
+
+      // Kolor dla cudzych wiadomości na podstawie mapy
+      if(data.name === username){
+        li.classList.add('mine');
+      } else {
+        li.classList.add('other');
+        li.style.backgroundColor = userColors[data.name] || "#FF69B4"; // domyślny róż jeśli brak w mapie
+      }
+
+      messages.appendChild(li);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Ładowanie wiadomości i nasłuchiwanie zmian
+    function loadMessages(){
+      db.collection("messages").orderBy("timestamp")
+        .onSnapshot(snapshot => {
+          messages.innerHTML = '';
+          snapshot.forEach(doc => addMessage(doc.data()));
+        });
+    }
+
+    // Wysyłanie wiadomości
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      if(input.value.trim() && username){
+        db.collection("messages").add({
+          name: username,
+          msg: input.value,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = '';
+      }
     });
-    input.value = '';
-  }
-});
-</script>
-
+  </script>
 </body>
 </html>
