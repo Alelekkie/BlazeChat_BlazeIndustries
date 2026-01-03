@@ -143,53 +143,37 @@ const messages = document.getElementById('messages');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 
-// Paleta kolorów
-const colorsPalette = ['#FF1493', '#FF69B4', '#8B008B', '#FFC0CB', '#DB7093', '#FFB6C1', '#FF4500', '#00CED1'];
+// Mapa kolorów dla konkretnych imion
+const userColors = {
+  "Klaudia": "#8B008B",  // ciemny róż
+  "Paweł": "#FF69B4",    // jasny róż
+  "Justyna": "#FFFFFF",   // biały
+  // dodaj kolejne imiona i kolory tutaj
+};
 
-// Pobierz zapisany nick i kolor
+// Pobierz zapisany nick z localStorage
 let username = localStorage.getItem('blazeChatUser');
-let userColor = localStorage.getItem('blazeChatColor');
-
-// Funkcja generująca losowy kolor z palety
-function randomColor() {
-  return colorsPalette[Math.floor(Math.random() * colorsPalette.length)];
-}
-
-// Pobranie koloru użytkownika z Firestore lub nadanie nowego
-async function getUserColor(name){
-  const userRef = db.collection('users').doc(name);
-  const doc = await userRef.get();
-  if(doc.exists){
-    return doc.data().color;
-  } else {
-    const color = randomColor();
-    await userRef.set({ color });
-    return color;
-  }
-}
 
 // Jeśli jest zapisany użytkownik, od razu pokazujemy chat
 if(username){
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
-  (async () => { userColor = await getUserColor(username); loadMessages(); })();
+  loadMessages();
 }
 
 // Wprowadzenie nicku
-usernameBtn.addEventListener('click', async () => {
+usernameBtn.addEventListener('click', () => {
   const name = usernameInput.value.trim();
   if(!name) return alert("Wpisz swoje imię!");
   username = name;
   localStorage.setItem('blazeChatUser', username);
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
-  userColor = await getUserColor(username);
-  localStorage.setItem('blazeChatColor', userColor);
   loadMessages();
 });
 
-// Dodawanie wiadomości do listy z kolorem
-async function addMessage(data){
+// Dodawanie wiadomości do listy z kolorem na podstawie imienia
+function addMessage(data){
   const li = document.createElement('li');
 
   const spanName = document.createElement('span');
@@ -202,12 +186,12 @@ async function addMessage(data){
   li.appendChild(spanName);
   li.appendChild(spanMsg);
 
+  // Kolor dla cudzych wiadomości na podstawie mapy
   if(data.name === username){
-    li.classList.add('mine'); // własne wiadomości białe
+    li.classList.add('mine');
   } else {
-    li.classList.add('other'); // cudze
-    const color = await getUserColor(data.name);
-    li.style.backgroundColor = color;
+    li.classList.add('other');
+    li.style.backgroundColor = userColors[data.name] || "#FF69B4"; // domyślny róż jeśli brak w mapie
   }
 
   messages.appendChild(li);
