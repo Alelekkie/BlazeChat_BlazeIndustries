@@ -143,18 +143,30 @@ const messages = document.getElementById('messages');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 
-// Pobierz zapisany nick z localStorage
 let username = localStorage.getItem('blazeChatUser');
 
-// Obiekt kolorów użytkowników pobrany z Firestore
+// Obiekt kolorów
 let userColors = {};
 
-// Funkcja pobiera wszystkie kolory z Firestore
-async function loadUserColors(){
-  const snapshot = await db.collection("users").get();
-  snapshot.forEach(doc => {
-    userColors[doc.id] = doc.data().color;
-  });
+// Funkcja zwracająca losowy kolor
+function getRandomColor() {
+  const colors = ["#FF69B4","#8B008B","#FF1493","#FFB6C1","#FFC0CB","#DB7093"];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+// Funkcja pobiera lub tworzy kolor użytkownika w Firestore
+async function getUserColor(name){
+  if(userColors[name]) return userColors[name]; // już mamy kolor
+  const docRef = db.collection("users").doc(name);
+  const doc = await docRef.get();
+  if(doc.exists){
+    userColors[name] = doc.data().color;
+  } else {
+    const color = getRandomColor();
+    await docRef.set({color});
+    userColors[name] = color;
+  }
+  return userColors[name];
 }
 
 // Jeśli jest zapisany użytkownik, od razu pokazujemy chat
@@ -175,14 +187,13 @@ usernameBtn.addEventListener('click', () => {
   initChat();
 });
 
-// Funkcja inicjalizująca chat
-async function initChat(){
-  await loadUserColors(); // pobierz kolory
-  loadMessages();          // uruchom nasłuchiwanie wiadomości
+// Inicjalizacja czatu
+function initChat(){
+  loadMessages();
 }
 
-// Dodawanie wiadomości do listy z kolorem na podstawie Firestore
-function addMessage(data){
+// Dodawanie wiadomości do listy
+async function addMessage(data){
   const li = document.createElement('li');
 
   const spanName = document.createElement('span');
@@ -195,14 +206,14 @@ function addMessage(data){
   li.appendChild(spanName);
   li.appendChild(spanMsg);
 
-  const color = userColors[data.name] || "#FF69B4"; // domyślny róż jeśli brak w Firestore
+  const color = await getUserColor(data.name);
 
   if(data.name === username){
     li.classList.add('mine');
-    li.style.backgroundColor = color; // Twój kolor z Firestore
+    li.style.backgroundColor = color;
   } else {
     li.classList.add('other');
-    li.style.backgroundColor = color; // Kolor innego użytkownika
+    li.style.backgroundColor = color;
   }
 
   messages.appendChild(li);
