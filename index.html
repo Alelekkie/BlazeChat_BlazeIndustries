@@ -166,14 +166,30 @@ if (username) {
   loadMessages();
 }
 
+
 usernameBtn.onclick = () => {
-  if (!usernameInput.value.trim()) return;
-  username = usernameInput.value.trim();
+  const name = usernameInput.value.trim();
+  if (!name) return;
+
+  username = name;
   localStorage.setItem('blazeChatUser', username);
+
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
+
+  // 🔔 PROŚBA O ZGODĘ NA POWIADOMIENIA
+  Notification.requestPermission().then(permission => {
+    if (permission === 'granted') {
+      console.log("Użytkownik zgodził się na powiadomienia ✅");
+    } else {
+      console.log("Użytkownik odmówił powiadomień ❌");
+    }
+  });
+
   loadMessages();
 };
+
+
 
 /* AUTOSCROLL – TYLKO GDY JESTEŚ NA DOLE */
 function shouldAutoScroll() {
@@ -199,12 +215,22 @@ function addMessage(data) {
   li.appendChild(msg);
   messages.appendChild(li);
 
+  // 🔔 POWIADOMIENIE SYSTEMOWE
+  if (username && data.name !== username && Notification.permission === 'granted') {
+    new Notification(`Nowa wiadomość od ${data.name}`, {
+      body: data.msg,
+      icon: 'https://raw.githubusercontent.com/TwójRepo/icon.png' // opcjonalnie ikona
+    });
+  }
+
   if (atBottom) {
     requestAnimationFrame(() => {
       messages.scrollTop = messages.scrollHeight;
     });
   }
 }
+
+
 
 /* LOAD */
 function loadMessages() {
