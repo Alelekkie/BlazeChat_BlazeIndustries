@@ -177,17 +177,13 @@ usernameBtn.onclick = () => {
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
 
-  // 🔔 Powiadomienia
-  Notification.requestPermission();
-
-  // 🔊 Odblokowanie dźwięku na iPhone
+  // 🔊 Odtwórz "puste" audio, żeby Safari odblokowało odtwarzanie
   const audio = document.getElementById('msg-sound');
-  audio.play().catch(() => {
-    console.log("Safari zablokował dźwięk, spróbuj kliknąć w czat");
-  });
+  audio.play().catch(() => console.log("Safari blokuje audio, odblokuje po kliknięciu"));
 
   loadMessages();
 };
+
 
 
 /* AUTOSCROLL – TYLKO GDY JESTEŚ NA DOLE */
@@ -259,3 +255,4 @@ form.onsubmit = e => {
 
 </body>
 </html>
+
