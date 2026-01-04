@@ -166,30 +166,14 @@ if (username) {
   loadMessages();
 }
 
-
 usernameBtn.onclick = () => {
-  const name = usernameInput.value.trim();
-  if (!name) return;
-
-  username = name;
+  if (!usernameInput.value.trim()) return;
+  username = usernameInput.value.trim();
   localStorage.setItem('blazeChatUser', username);
-
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
-
-  // PROŚBA O ZGODĘ
-  Notification.requestPermission().then(permission => {
-    if (permission === 'granted') {
-      console.log("Użytkownik zgodził się na powiadomienia ✅");
-    } else {
-      console.log("Użytkownik odmówił powiadomień ❌");
-    }
-  });
-
   loadMessages();
 };
-
-
 
 /* AUTOSCROLL – TYLKO GDY JESTEŚ NA DOLE */
 function shouldAutoScroll() {
@@ -215,31 +199,12 @@ function addMessage(data) {
   li.appendChild(msg);
   messages.appendChild(li);
 
-  // 🌸 Zamiast Notification API – wyświetl mały alert w DOM
-  if (data.name !== username) {
-    const alertBox = document.createElement('div');
-    alertBox.textContent = `Nowa wiadomość od ${data.name}: ${data.msg}`;
-    alertBox.style.position = 'fixed';
-    alertBox.style.bottom = '10px';
-    alertBox.style.right = '10px';
-    alertBox.style.background = '#ff69b4';
-    alertBox.style.color = '#fff';
-    alertBox.style.padding = '10px';
-    alertBox.style.borderRadius = '10px';
-    alertBox.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-    document.body.appendChild(alertBox);
-
-    setTimeout(() => alertBox.remove(), 5000);
-  }
-
   if (atBottom) {
     requestAnimationFrame(() => {
       messages.scrollTop = messages.scrollHeight;
     });
   }
 }
-
-
 
 /* LOAD */
 function loadMessages() {
@@ -267,6 +232,3 @@ form.onsubmit = e => {
 
 </body>
 </html>
-
-
-
