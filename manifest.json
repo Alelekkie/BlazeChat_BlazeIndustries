@@ -1,5 +1,5 @@
 {
-    "name": "BlazeChat ",
+    "name": "BlazeChat",
     "short_name": "BlazeChat",
     "description": "Aplikacja do zarządzania filmami",
     "start_url": ".",
@@ -19,5 +19,6 @@
         }
     ]
 }
+
 
 
