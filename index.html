@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <!-- Manifest PWA -->
-  <link rel="manifest" href="manifest.json">
-
-  <!-- Ikona do Safari -->
-  <link rel="apple-touch-icon" href="icon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Blaze Chat 🔥</title>
@@ -179,6 +174,25 @@ usernameBtn.onclick = () => {
   chatContainer.style.display = 'flex';
   loadMessages();
 };
+    usernameBtn.onclick = () => {
+  if (!usernameInput.value.trim()) return;
+  username = usernameInput.value.trim();
+  localStorage.setItem('blazeChatUser', username);
+  usernameContainer.style.display = 'none';
+  chatContainer.style.display = 'flex';
+
+  // ✅ PROŚBA O ZGODĘ NA POWIADOMIENIA
+  if (Notification.permission !== 'granted') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        console.log("Użytkownik zgodził się na powiadomienia ✅");
+      }
+    });
+  }
+
+  loadMessages();
+};
+
 
 /* AUTOSCROLL – TYLKO GDY JESTEŚ NA DOLE */
 function shouldAutoScroll() {
@@ -204,12 +218,18 @@ function addMessage(data) {
   li.appendChild(msg);
   messages.appendChild(li);
 
+  // 🔔 Powiadomienie tylko jeśli wiadomość od innego użytkownika
+  if (username && data.name !== username && Notification.permission === 'granted') {
+    new Notification(`Nowa wiadomość od ${data.name}`, { body: data.msg });
+  }
+
   if (atBottom) {
     requestAnimationFrame(() => {
       messages.scrollTop = messages.scrollHeight;
     });
   }
 }
+
 
 /* LOAD */
 function loadMessages() {
@@ -237,4 +257,3 @@ form.onsubmit = e => {
 
 </body>
 </html>
-
