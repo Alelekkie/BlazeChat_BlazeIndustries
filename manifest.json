@@ -2,7 +2,7 @@
     "name": "BlazeChat",
     "short_name": "BlazeChat",
     "description": "Aplikacja do zarządzania filmami",
-    "start_url": ".",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#121212",
     "theme_color": "#ff69b4",
@@ -19,6 +19,7 @@
         }
     ]
 }
+
 
 
 
