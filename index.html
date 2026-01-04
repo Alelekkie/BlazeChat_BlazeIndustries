@@ -166,14 +166,7 @@ if (username) {
   loadMessages();
 }
 
-usernameBtn.onclick = () => {
-  if (!usernameInput.value.trim()) return;
-  username = usernameInput.value.trim();
-  localStorage.setItem('blazeChatUser', username);
-  usernameContainer.style.display = 'none';
-  chatContainer.style.display = 'flex';
-  loadMessages();
-};
+
     usernameBtn.onclick = () => {
   if (!usernameInput.value.trim()) return;
   username = usernameInput.value.trim();
@@ -257,3 +250,4 @@ form.onsubmit = e => {
 
 </body>
 </html>
+
