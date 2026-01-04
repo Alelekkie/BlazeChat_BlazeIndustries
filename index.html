@@ -118,7 +118,6 @@ form button {
   <input id="username-input" placeholder="Wpisz swoje imię..." />
   <button id="username-btn">Wejdź do czatu</button>
 </div>
-<audio id="msg-sound" src="ding.mp3" preload="auto"></audio>
 
 <div id="chat-container">
   <ul id="messages"></ul>
@@ -127,6 +126,7 @@ form button {
     <button>Wyślij</button>
   </form>
 </div>
+<audio id="msg-sound" src="ding.mp3" preload="auto"></audio>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -167,7 +167,6 @@ if (username) {
   loadMessages();
 }
 
-
 usernameBtn.onclick = () => {
   const name = usernameInput.value.trim();
   if (!name) return;
@@ -178,18 +177,17 @@ usernameBtn.onclick = () => {
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
 
-  // 🔔 PROŚBA O ZGODĘ NA POWIADOMIENIA
-  Notification.requestPermission().then(permission => {
-    if (permission === 'granted') {
-      console.log("Użytkownik zgodził się na powiadomienia ✅");
-    } else {
-      console.log("Użytkownik odmówił powiadomień ❌");
-    }
+  // 🔔 Powiadomienia
+  Notification.requestPermission();
+
+  // 🔊 Odblokowanie dźwięku na iPhone
+  const audio = document.getElementById('msg-sound');
+  audio.play().catch(() => {
+    console.log("Safari zablokował dźwięk, spróbuj kliknąć w czat");
   });
 
   loadMessages();
 };
-
 
 
 /* AUTOSCROLL – TYLKO GDY JESTEŚ NA DOLE */
@@ -231,16 +229,18 @@ function addMessage(data) {
 }
 
 
-
-
 /* LOAD */
 function loadMessages() {
   db.collection("messages").orderBy("timestamp")
     .onSnapshot(snapshot => {
-      messages.innerHTML = "";
-      snapshot.forEach(doc => addMessage(doc.data()));
+      snapshot.docChanges().forEach(change => {
+        if (change.type === "added") {
+          addMessage(change.doc.data());
+        }
+      });
     });
 }
+
 
 /* SEND */
 form.onsubmit = e => {
