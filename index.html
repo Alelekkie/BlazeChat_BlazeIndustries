@@ -118,6 +118,7 @@ form button {
   <input id="username-input" placeholder="Wpisz swoje imię..." />
   <button id="username-btn">Wejdź do czatu</button>
 </div>
+<audio id="msg-sound" src="ding.mp3" preload="auto"></audio>
 
 <div id="chat-container">
   <ul id="messages"></ul>
@@ -215,12 +216,11 @@ function addMessage(data) {
   li.appendChild(msg);
   messages.appendChild(li);
 
-  // 🔔 POWIADOMIENIE SYSTEMOWE
-  if (username && data.name !== username && Notification.permission === 'granted') {
-    new Notification(`Nowa wiadomość od ${data.name}`, {
-      body: data.msg,
-      icon: 'https://raw.githubusercontent.com/TwójRepo/icon.png' // opcjonalnie ikona
-    });
+  // 🔊 Odtwarzanie dźwięku jeśli wiadomość od innego użytkownika
+  if (username && data.name !== username) {
+    const audio = document.getElementById('msg-sound');
+    audio.currentTime = 0; // odtwarzanie od początku
+    audio.play();
   }
 
   if (atBottom) {
@@ -229,6 +229,7 @@ function addMessage(data) {
     });
   }
 }
+
 
 
 
