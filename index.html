@@ -167,24 +167,28 @@ if (username) {
 }
 
 
-    usernameBtn.onclick = () => {
-  if (!usernameInput.value.trim()) return;
-  username = usernameInput.value.trim();
+usernameBtn.onclick = () => {
+  const name = usernameInput.value.trim();
+  if (!name) return;
+
+  username = name;
   localStorage.setItem('blazeChatUser', username);
+
   usernameContainer.style.display = 'none';
   chatContainer.style.display = 'flex';
 
-  // ✅ PROŚBA O ZGODĘ NA POWIADOMIENIA
-  if (Notification.permission !== 'granted') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        console.log("Użytkownik zgodził się na powiadomienia ✅");
-      }
-    });
-  }
+  // PROŚBA O ZGODĘ
+  Notification.requestPermission().then(permission => {
+    if (permission === 'granted') {
+      console.log("Użytkownik zgodził się na powiadomienia ✅");
+    } else {
+      console.log("Użytkownik odmówił powiadomień ❌");
+    }
+  });
 
   loadMessages();
 };
+
 
 
 /* AUTOSCROLL – TYLKO GDY JESTEŚ NA DOLE */
@@ -250,4 +254,5 @@ form.onsubmit = e => {
 
 </body>
 </html>
+
 
