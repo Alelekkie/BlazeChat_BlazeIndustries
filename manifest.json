@@ -4,7 +4,7 @@
     "description": "Aplikacja do zarządzania filmami",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#121212",
+    "background_color": "#ff69b4",
     "theme_color": "#ff69b4",
     "icons": [
         {
@@ -19,6 +19,7 @@
         }
     ]
 }
+
 
 
 
